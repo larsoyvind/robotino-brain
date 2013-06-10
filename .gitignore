@@ -11,3 +11,16 @@
 *.lai
 *.la
 *.a
+
+
+## generic files to ignore
+*~
+*.lock
+*.DS_Store
+*.swp
+*.swo
+*.out
+*.data
+main
+bin/
+log/
