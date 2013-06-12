@@ -8,7 +8,12 @@
 
 #include "kinect/KinectReader.h"
 
-// #include "tcp/TcpSocket.h"
+#define ROBOTINO_DEFAULT_IP "10.10.1.57"
+#define ROBOTINO_CONNECTION_NAME "RobotinoBrain"
+
+#define KINECT_IP "10.10.1.66"
+#define	KINECT_PORT "5000"
+#define KINECT_HEIGHT_METERS 0.68
 
 using namespace std;
 
@@ -18,16 +23,13 @@ using namespace std;
  */
 int main( int argc, char *argv[] )
 {
-
 	// parse and apply arguments
 	
-	string name = "RobotinoBrain"; 
-	string robotinoIP = "10.10.1.57";
+	string name = ROBOTINO_CONNECTION_NAME;
+	string robotinoIP = ROBOTINO_DEFAULT_IP;
 
 	if ( argc > 1 )
-	{
 		robotinoIP = argv[1];
-	}
 
 	// initialize console display if applicable
 
@@ -43,8 +45,8 @@ int main( int argc, char *argv[] )
 		return EXIT_FAILURE;
 	}
 	
-	/// @todo Kinect address and port as parameters
-	brain.enableKinect( "10.10.1.66", "50000", 0.68 );
+	// Enable and connect to Kinect Server
+	//brain.enableKinect( KINECT_IP, KINECT_PORT, KINECT_HEIGHT_METERS );
 	
 	// start brain function (loop)
 	brain.start();
