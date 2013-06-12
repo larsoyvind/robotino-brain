@@ -24,10 +24,16 @@ namespace rec {
 /// Parameter to adjust for deviation in Kinects depth (z) coordinate
 #define KINECTREADER_DEPTH_ADJUSTMENT	-0.1
 
-
+/**
+ *	Class for connecting to a remote server with a connected Kinect.
+ *
+ *	The current implementation reads lines containing one coordinate on the
+ *	formate [x],[y],[z] (without the brackets), using . as the decimal
+ *	separator.
+ */
 class KinectReader
 {
-	public: 
+	public:
 		/**
 		 * Construct the Kinect reader object
 		 *
@@ -39,6 +45,10 @@ class KinectReader
 
 		/**
 		 * Connects to the server and starts the loop reading coordinates
+		 *
+		 * The recieved coordinates are expected to be on the form [x],[y],[z]
+		 * where . is used as decimal separator and each line contains only
+		 * one coordinate.
 		 *
 		 * @param	average	The number of values over which to calculate an average coordinate
 		 * @return	Integer indicating exit status, statuses are defined in this header file
