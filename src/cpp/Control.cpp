@@ -69,12 +69,6 @@ class Control
 
 			separator = input.find_first_of( " " );
 
-			if ( separator == std::string::npos )
-			{
-				this->printInstructions();
-				continue;
-			}
-
 			this->_stop = true;
 			if ( this->tWorker.joinable() )
 				this->tWorker.join();
