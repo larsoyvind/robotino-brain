@@ -156,13 +156,13 @@ _CompactBha::analyze()
 		if ( diff > CBHA_ARM_ACTIVITY_THRESHOLD )
 		{
 			armActivity = true;
-			std::cout
-				<< "CompactBha: Arm activity threshold! - Diffs"
-			    << " ("	<< i << ": "
-				<< readPressures[ i ] << " - "
-				<< targetPressures[ i ] << " = "
-				<< diff << " )"
-				<< std::endl;
+//			std::cout
+//				<< "CompactBha: Arm activity threshold! - Diffs"
+//			    << " ("	<< i << ": "
+//				<< readPressures[ i ] << " - "
+//				<< targetPressures[ i ] << " = "
+//				<< diff << " )"
+//				<< std::endl;
 			break;
 		}
 		else
@@ -172,13 +172,13 @@ _CompactBha::analyze()
 			if ( fabs( pressureDeltaSum ) > CBHA_ARM_ACTIVITY_DELTAS_THRESHOLD )
 			{
 				armActivity = true;
-				std::cout
-					<< "CompactBha: Arm activity threshold! - Deltas"
-					<< " ("	<< i << ": "
-					<< pressureDeltaSum
-					<< " > " << CBHA_ARM_ACTIVITY_DELTAS_THRESHOLD
-					<< " )"
-					<< std::endl;
+//				std::cout
+//					<< "CompactBha: Arm activity threshold! - Deltas"
+//					<< " ("	<< i << ": "
+//					<< pressureDeltaSum
+//					<< " > " << CBHA_ARM_ACTIVITY_DELTAS_THRESHOLD
+//					<< " )"
+//					<< std::endl;
 				break;
 			}
 		}
