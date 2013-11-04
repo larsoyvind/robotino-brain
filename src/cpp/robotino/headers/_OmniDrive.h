@@ -205,6 +205,17 @@ class _OmniDrive : public Axon, public rec::robotino::api2::OmniDrive
 	 * Releases a stop-command by setting the @c stop parameter to false.
 	 */
 	void go();
+
+	/**
+	 * Overrides rec::robotino::api2::OmniDrive::setVelocity()
+	 * Suspends the automatic driving system and sets given speeds for
+	 * x, y and omega:
+	 *
+	 * @param xSpeed	Desired speed in x direction
+	 * @param ySpeed	Desired speed in y direction
+	 * @param omega		Desired rotation speed
+	 */
+	void setVelocity( float xSpeed, float ySpeed, float omega );
 	
 
  private:
@@ -232,7 +243,9 @@ class _OmniDrive : public Axon, public rec::robotino::api2::OmniDrive
 	/// Yup, do that
 		_doPointAt,
 	/// If set, Robotino will stop and will not move.
-		stop;
+		stop,
+	/// Automatically moving to destination
+		autoDrive;
 
 	Coordinate
 	/// Coordinate of the current destination

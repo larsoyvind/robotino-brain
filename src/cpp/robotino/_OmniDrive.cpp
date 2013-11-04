@@ -32,6 +32,8 @@ _OmniDrive::_OmniDrive( Brain * pBrain )
 
 	this->travelReversed = false;
 	this->onlyManouver = false;
+	this->autoDrive = true;
+	this->stop = false;
 
 	this->_destination = (Coordinate) this->brain()->odom()->getPosition();
 	this->_pointAt = Coordinate( 0.0, 0.0 );
@@ -42,12 +44,17 @@ _OmniDrive::_OmniDrive( Brain * pBrain )
 Coordinate
 _OmniDrive::destination()
 {
+	// Not sure if this is the best value, however, returning 
+	// null object might cause breakage --Lars
+	if ( ! this->autoDrive ) return this->brain()->odom()->getPosition();
+
 	return this->_destination;
 }
 
 void
 _OmniDrive::setDestination( Coordinate destination )
 {
+	this->autoDrive = true;
 	this->_destination = destination;
 }
 
@@ -60,6 +67,11 @@ _OmniDrive::pointAt()
 void
 _OmniDrive::setPointAt( Coordinate target )
 {
+	if ( ! this->autoDrive )
+	{
+		this->setDestination( this->brain()->odom()->getPosition() );
+		this->autoDrive = true;
+	}
 	this->_pointAt = target;
 	this->_doPointAt = true;
 }
@@ -98,6 +110,13 @@ _OmniDrive::analyze()
 void
 _OmniDrive::apply()
 {
+	// Override automatic driving if disabled
+	if ( ! this->autoDrive )
+	{
+//		std::cout << "OmniDrive: apply() aborted, autoDrive disabled" << std::endl;
+		return;
+	}
+
 	// Preserve old values
 	this->xOld = this->xSpeed;
 	this->yOld = this->ySpeed;
@@ -140,19 +159,21 @@ _OmniDrive::apply()
 //		<< this->omega
 //		<< std::endl;
 
-	this->setVelocity( xSpeed, ySpeed, omega );
+	rec::robotino::api2::OmniDrive::setVelocity( xSpeed, ySpeed, omega );
 }
 
 void
 _OmniDrive::niceStop()
 {
+	std::cout << "OmniDrive: performing a nice stop" << std::endl;
 	this->stop = true;
 }
 
 void
 _OmniDrive::fullStop()
 {
-	this->setVelocity( 0.0, 0.0, 0.0 );
+	std::cout << "OmniDrive: performing emergency full stop" << std::endl;
+	rec::robotino::api2::OmniDrive::setVelocity( 0.0, 0.0, 0.0 );
 	this->xSpeed = 0.0;
 	this->ySpeed = 0.0;
 	this->omega = 0.0;
@@ -171,9 +192,31 @@ _OmniDrive::stopIsSet()
 void
 _OmniDrive::go()
 {
+	std::cout << "Omnidrive: resuming drive" << std::endl; 
 	this->stop = false;
 }
 
+void
+_OmniDrive::setVelocity( float xSpeed, float ySpeed, float omega )
+{
+	if ( this->stop )
+	{
+		std::cout << "OmniDrive: cannot set speed, stop order in effect" << std::endl;
+		return;
+	}
+
+	if ( this->autoDrive )
+	{
+		this->autoDrive = false;
+		std::cout << "Switched to manual drive mode" << std::endl;
+	}
+	// TODO Use smooth accelleration? Target speeds?
+	rec::robotino::api2::OmniDrive::setVelocity( xSpeed, ySpeed, omega );
+}
+
+
+
+// PRIVATE FUNCTIONS
 
 void
 _OmniDrive::travelTowards( Vector destinationVector )
