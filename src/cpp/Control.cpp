@@ -102,6 +102,21 @@ class Control
 				std::cerr << "Pointing stopped" << std::endl;
 			}
 
+			else if ( command == "speed" )
+			{
+				float s[] = { 0.0, 0.0, 0.0 };
+
+				for ( int i = 0; i < 3; i++ )
+				{
+					if ( separator == input.npos ) break;
+					size_t start = ++separator;
+					separator = input.find( ' ', start );
+					s[i] = atof( input.substr( start, separator).c_str() );
+				}
+
+				this->pBrain->drive()->setVelocity( s[0], s[1], s[2] );
+			}
+
 			else if ( command == "resetodometry" )
 			{
 				this->pBrain->drive()->fullStop();
@@ -263,6 +278,7 @@ class Control
 			<< "go\tI will continue, if I was previously stopped\n"
 			<< "pointat [coordinate]\tI will turn myself to point at the given coordinate. I will hovever not do this until I am close enough to my destination.\n"
 			<< "stoppointing\tI will not point any more\n"
+			<< "speed [x< y< omega>>]\tSet Robotino's OmniDrive to the given speeds\n"
 			<< "resetodometry\tSets all odometry values to 0. Also resets destination and stops any pointing.\n"
 
 			<< "\nArm:\n"
