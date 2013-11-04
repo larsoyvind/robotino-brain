@@ -55,7 +55,7 @@ class Control
 			input = "",
 			command = "";
 
-		unsigned int
+		size_t
 			separator = 0;
 
 		sleep( 1 );
@@ -76,11 +76,9 @@ class Control
 
 			command = input.substr( 0, separator );
 
-			separator += 1;
-
 			if ( command == "goto" )
 			{
-				std::cerr << "Going to " << input.substr( separator ) << std::endl;
+				std::cerr << "Going to " << input.substr( ++separator ) << std::endl;
 				this->goTo( input.substr( separator ) );
 			}
 			else if ( command == "stop" )
@@ -95,7 +93,7 @@ class Control
 			}
 			else if ( command == "pointat" )
 			{
-				std::cerr << "Pointing at " << input.substr( separator ) << std::endl;
+				std::cerr << "Pointing at " << input.substr( ++separator ) << std::endl;
 				this->pointAt( input.substr( separator ) );
 			}
 			else if ( command == "stoppointing" )
