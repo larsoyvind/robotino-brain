@@ -14,49 +14,60 @@ GEOMETRY=geometry/
 main: main.cpp Control.cpp $(BIN)Brain.o $(BIN)_Bumper.o $(BIN)_CompactBha.o $(BIN)_Odometry.o $(BIN)_OmniDrive.o $(BIN)_DistanceSensors.o $(BIN)Vector.o $(BIN)Coordinate.o $(BIN)Angle.o $(BIN)AngularCoordinate.o $(BIN)Scalar.o $(BIN)VolumeCoordinate.o $(BIN)TcpSocket.o $(BIN)KinectReader.o
 	$(CC) $(CFLAGS) -l $(API2LIB) -o $@ main.cpp Control.cpp $(BIN)Brain.o $(BIN)_Bumper.o $(BIN)_CompactBha.o $(BIN)_Odometry.o $(BIN)_OmniDrive.o $(BIN)_DistanceSensors.o $(BIN)Vector.o $(BIN)Coordinate.o $(BIN)Angle.o $(BIN)AngularCoordinate.o $(BIN)Scalar.o $(BIN)VolumeCoordinate.o $(BIN)TcpSocket.o $(BIN)KinectReader.o
 
-$(BIN):
-	mkdir -p $(BIN)
-
-$(BIN)Brain.o: $(BIN) $(ROBOTINO)Brain.cpp
+$(BIN)Brain.o: $(ROBOTINO)Brain.cpp
+	@[ -d $(BIN) ] || mkdir -p $(BIN)
 	$(CC) $(CFLAGS) -c -o $@ $?
 
-$(BIN)_Bumper.o: $(BIN) $(ROBOTINO)_Bumper.cpp
+$(BIN)_Bumper.o: $(ROBOTINO)_Bumper.cpp
+	@[ -d $(BIN) ] || mkdir -p $(BIN)
 	$(CC) $(CFLAGS) -c -o $@ $?
 
-$(BIN)_CompactBha.o: $(BIN) $(ROBOTINO)_CompactBha.cpp
+$(BIN)_CompactBha.o: $(ROBOTINO)_CompactBha.cpp
+	@[ -d $(BIN) ] || mkdir -p $(BIN)
 	$(CC) $(CFLAGS) -c -o $@ $?
 
-$(BIN)_Odometry.o: $(BIN) $(ROBOTINO)_Odometry.cpp
+$(BIN)_Odometry.o: $(ROBOTINO)_Odometry.cpp
+	@[ -d $(BIN) ] || mkdir -p $(BIN)
 	$(CC) $(CFLAGS) -c -o $@ $?
 
-$(BIN)_OmniDrive.o: $(BIN) $(ROBOTINO)_OmniDrive.cpp
+$(BIN)_OmniDrive.o: $(ROBOTINO)_OmniDrive.cpp
+	@[ -d $(BIN) ] || mkdir -p $(BIN)
 	$(CC) $(CFLAGS) -c -o $@ $?
 
-$(BIN)_DistanceSensors.o: $(BIN) $(ROBOTINO)_DistanceSensors.cpp
+$(BIN)_DistanceSensors.o: $(ROBOTINO)_DistanceSensors.cpp
+	@[ -d $(BIN) ] || mkdir -p $(BIN)
 	$(CC) $(CFLAGS) -c -o $@ $?
 
-$(BIN)Vector.o: $(BIN) $(GEOMETRY)Vector.cpp
+$(BIN)Vector.o: $(GEOMETRY)Vector.cpp
+	@[ -d $(BIN) ] || mkdir -p $(BIN)
 	$(CC) $(CFLAGS) -c -o $@ $?
 
-$(BIN)Coordinate.o: $(BIN) $(GEOMETRY)Coordinate.cpp
+$(BIN)Coordinate.o: $(GEOMETRY)Coordinate.cpp
+	@[ -d $(BIN) ] || mkdir -p $(BIN)
 	$(CC) $(CFLAGS) -c -o $@ $?
 
-$(BIN)Angle.o: $(BIN) $(GEOMETRY)Angle.cpp
+$(BIN)Angle.o: $(GEOMETRY)Angle.cpp
+	@[ -d $(BIN) ] || mkdir -p $(BIN)
 	$(CC) $(CFLAGS) -c -o $@ $?
 
-$(BIN)AngularCoordinate.o: $(BIN) $(GEOMETRY)AngularCoordinate.cpp
+$(BIN)AngularCoordinate.o: $(GEOMETRY)AngularCoordinate.cpp
+	@[ -d $(BIN) ] || mkdir -p $(BIN)
 	$(CC) $(CFLAGS) -c -o $@ $?
 
-$(BIN)Scalar.o: $(BIN) $(GEOMETRY)Scalar.cpp
+$(BIN)Scalar.o: $(GEOMETRY)Scalar.cpp
+	@[ -d $(BIN) ] || mkdir -p $(BIN)
 	$(CC) $(CFLAGS) -c -o $@ $?
 
-$(BIN)VolumeCoordinate.o: $(BIN) $(GEOMETRY)VolumeCoordinate.cpp
+$(BIN)VolumeCoordinate.o: $(GEOMETRY)VolumeCoordinate.cpp
+	@[ -d $(BIN) ] || mkdir -p $(BIN)
 	$(CC) $(CFLAGS) -c -o $@ $?
 
-$(BIN)TcpSocket.o: $(BIN) $(TCP)TcpSocket.cpp
+$(BIN)TcpSocket.o: $(TCP)TcpSocket.cpp
+	@[ -d $(BIN) ] || mkdir -p $(BIN)
 	$(CC) $(CFLAGS) -c -o $@ $?
 
-$(BIN)KinectReader.o: $(BIN) $(KINECT)KinectReader.cpp
+$(BIN)KinectReader.o: $(KINECT)KinectReader.cpp
+	@[ -d $(BIN) ] || mkdir -p $(BIN)
 	$(CC) $(CFLAGS) -c -o $@ $?
 
 
@@ -72,4 +83,4 @@ clean: $(BIN)
 	-rm main
 	-rm test
 #	-rm $(AUX)options
-	-rm $(BIN)*.o
+	-[ ! -d $(BIN) ] || rm $(BIN)*.o
