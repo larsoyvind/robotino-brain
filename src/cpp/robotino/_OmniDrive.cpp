@@ -34,6 +34,7 @@ _OmniDrive::_OmniDrive( Brain * pBrain )
 	this->onlyManouver = false;
 	this->autoDrive = true;
 	this->stop = false;
+   this->autoDrive = false;
 
 	this->_destination = (Coordinate) this->brain()->odom()->getPosition();
 	this->_pointAt = Coordinate( 0.0, 0.0 );
