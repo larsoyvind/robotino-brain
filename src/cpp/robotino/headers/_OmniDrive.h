@@ -16,6 +16,10 @@ class Vector;
 class AngularCoordinate;
 
 
+   // Speed
+/// The maximum top speed when setting speed manually
+#define OMNIDRIVE_MAX_SPEED   0.7
+
 	// Travel
 
 /// The maximum speed Robotino will travel at, in m/s.
@@ -233,7 +237,11 @@ class _OmniDrive : public Axon, public rec::robotino::api2::OmniDrive
 	/// Previous turning speed
 		omegaOld,
 	/// Distance to target do considere as arrived
-		_stopWithin;
+		_stopWithin,
+   /// Target manual speeds
+      targetXSpeed,
+      targetYSpeed,
+      targetOmega;
 
 	bool
 	/// Travel backwards, protecting the cBHA

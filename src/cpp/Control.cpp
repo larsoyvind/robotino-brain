@@ -114,6 +114,7 @@ class Control
 					s[i] = atof( input.substr( start, separator).c_str() );
 				}
 
+            std::cerr << "Setting speeds " << s[0] << ", " << s[1] << ", " << s[2] << std::endl;
 				this->pBrain->drive()->setVelocity( s[0], s[1], s[2] );
 			}
 
