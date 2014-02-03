@@ -13,7 +13,6 @@
 #include <unistd.h> // Needed by usleep()
 #include <stdlib.h>
 #include <iostream>
-#include <iomanip>	// Manipulation of output
 #include <math.h> // For abs()
 
 
@@ -30,14 +29,14 @@ _OmniDrive::_OmniDrive( Brain * pBrain )
 	this->yOld = 0.0;
 	this->omegaOld = 0.0;
 
-   this->targetXSpeed = 0.0;
-   this->targetYSpeed = 0.0;
-   this->targetOmega = 0.0;
+	this->targetXSpeed = 0.0;
+	this->targetYSpeed = 0.0;
+	this->targetOmega = 0.0;
 
 	this->travelReversed = false;
 	this->onlyManouver = false;
 	this->stop = false;
-   this->autoDrive = false;
+	this->autoDrive = false;
 
 	this->_destination = (Coordinate) this->brain()->odom()->getPosition();
 	this->_pointAt = Coordinate( 0.0, 0.0 );
@@ -119,39 +118,39 @@ _OmniDrive::apply()
 	this->yOld = this->ySpeed;
 	this->omegaOld = this->omega;
 
-   if ( this->autoDrive )
-   {
-      // Initial values = stop
-      this->xSpeed = 0.0;
-      this->ySpeed = 0.0;
-      this->omega = 0.0;
+	if ( this->autoDrive )
+	{
+		// Initial values = stop
+		this->xSpeed = 0.0;
+		this->ySpeed = 0.0;
+		this->omega = 0.0;
 
-      if ( ! this->stop )
-      {
-         // Aquire position and destination
-         AngularCoordinate position = this->brain()->odom()->getPosition();
-         Coordinate destination = this->destination();
-         Vector destinationVector = position.getVector( destination );
+		if ( ! this->stop )
+		{
+			// Aquire position and destination
+			AngularCoordinate position = this->brain()->odom()->getPosition();
+			Coordinate destination = this->destination();
+			Vector destinationVector = position.getVector( destination );
 
-         // Calculate driving speed
-         if ( this->onlyManouver || destinationVector.magnitude() < OMNIDRIVE_TRAVEL_MIN_DISTANCE )
-            this->manouverTowards( (Angle) position, destinationVector );
-         else
-            this->travelTowards( destinationVector );
+			// Calculate driving speed
+			if ( this->onlyManouver || destinationVector.magnitude() < OMNIDRIVE_TRAVEL_MIN_DISTANCE )
+				this->manouverTowards( (Angle) position, destinationVector );
+			else
+				this->travelTowards( destinationVector );
 
-         // Calculate turning speed if not driving
-         if ( this->pointingActive() && destinationVector.magnitude() <
-               ( OMNIDRIVE_POINTING_DESTINATION_MAX_DISTANCE - this->_stopWithin ) )
-            this->turnTowards( position, _pointAt );
-      }
-   }
-   else
-   {
-      // Use manual drive target speeds
-      this->xSpeed = this->targetXSpeed;
-      this->ySpeed = this->targetYSpeed;
-      this->omega = this->targetOmega;
-   }
+			// Calculate turning speed if not driving
+			if ( this->pointingActive() && destinationVector.magnitude() <
+					( OMNIDRIVE_POINTING_DESTINATION_MAX_DISTANCE - this->_stopWithin ) )
+				this->turnTowards( position, _pointAt );
+		}
+	}
+	else
+	{
+		// Use manual drive target speeds
+		this->xSpeed = this->targetXSpeed;
+		this->ySpeed = this->targetYSpeed;
+		this->omega = this->targetOmega;
+	}
 	
 	// Apply soft accelleration
 	this->xSpeed = this->softAccellerate( this->xSpeed, this->xOld );
@@ -218,9 +217,9 @@ _OmniDrive::setVelocity( float xSpeed, float ySpeed, float omega )
 		std::cout << "Switched to manual drive mode" << std::endl;
 	}
 
-   this->targetXSpeed = xSpeed < OMNIDRIVE_MAX_SPEED ? xSpeed : OMNIDRIVE_MAX_SPEED;
-   this->targetYSpeed = ySpeed < OMNIDRIVE_MAX_SPEED ? ySpeed : OMNIDRIVE_MAX_SPEED;
-   this->targetOmega = omega < OMNIDRIVE_MAX_SPEED ? omega : OMNIDRIVE_MAX_SPEED;
+	this->targetXSpeed = xSpeed < OMNIDRIVE_MAX_SPEED ? xSpeed : OMNIDRIVE_MAX_SPEED;
+	this->targetYSpeed = ySpeed < OMNIDRIVE_MAX_SPEED ? ySpeed : OMNIDRIVE_MAX_SPEED;
+	this->targetOmega = omega < OMNIDRIVE_MAX_SPEED ? omega : OMNIDRIVE_MAX_SPEED;
 }
 
 
@@ -262,7 +261,7 @@ _OmniDrive::turnTowards( AngularCoordinate position, Coordinate target )
 	Angle deltaAngle = position.deltaAngle( targetVector );
 
 //	std::cout
-//		<< "OmniDrive position       : " << position
+//		<< "OmniDrive position		 : " << position
 //		<< "\nOmniDrive turning towards: " << target
 //		<< "\nOmniDrive turn deltaAngle: " << deltaAngle << std::endl;
 

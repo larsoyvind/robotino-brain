@@ -11,7 +11,6 @@
 #include <stdlib.h>
 #include <iostream>
 #include <string>
-#include <iomanip>	// Manipulation of output
 #include <unistd.h> // Needed by usleep()
 #include <math.h>	// Needed by fabs()
 #include <vector>
@@ -115,7 +114,7 @@ class Control
 					s[i] = atof( input.substr( start, separator).c_str() );
 				}
 
-            std::cerr << "Setting speeds " << s[0] << ", " << s[1] << ", " << s[2] << std::endl;
+			std::cerr << "Setting speeds " << s[0] << ", " << s[1] << ", " << s[2] << std::endl;
 				this->pBrain->drive()->setVelocity( s[0], s[1], s[2] );
 			}
 
@@ -138,31 +137,31 @@ class Control
 			//	[coordinate]\n"
 			}
 			else if ( command == "outer" )
-			{   
+			{
 			//	[coordinate]\n"
 			}
 */			else if ( command == "relaxarm" )
-			{   
+			{
 				std::cerr << "Relaxing arm" << std::endl;
 				this->pBrain->cbha()->armRelax();
 			}
 			else if ( command == "horisontal" )
-			{   
+			{
 				std::cerr << "Rotate horisontal" << std::endl;
 				this->pBrain->cbha()->rotateHorisontal();
 			}
 			else if ( command == "vertical" )
-			{   
+			{
 				std::cerr << "Rotate vertical" << std::endl;
 				this->pBrain->cbha()->rotateVertical();
 			}
 			else if ( command == "norotate" )
-			{   
+			{
 				std::cerr << "Relaxing rotation" << std::endl;
 				this->pBrain->cbha()->rotateRelax();
 			}
 			else if ( command == "grip" )
-			{   
+			{
 				std::cerr << "Gripping" << std::endl;
 				this->pBrain->cbha()->grip();
 			}
@@ -357,7 +356,7 @@ class Control
 		bool high = false;
 
 		while ( ! this->_stop
-			   && (	( ! deliver && ! this->pBrain->cbha()->isHolding() )
+				&& ( ( ! deliver && ! this->pBrain->cbha()->isHolding() )
 					|| ( deliver && this->pBrain->cbha()->isHolding() ) ) )
 		{
 			if ( this->pBrain->kinect()->isUpdated() && this->pBrain->kinect()->dataAge() < 200 )
