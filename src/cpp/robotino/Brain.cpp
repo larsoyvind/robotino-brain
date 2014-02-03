@@ -5,6 +5,7 @@
 #include "headers/_CompactBha.h"
 #include "headers/_Odometry.h"
 #include "headers/_DistanceSensors.h"
+#include "headers/_LaserRangeFinder.h"
 
 #include "../geometry/All.h"
 
@@ -78,6 +79,18 @@ Brain::cbha()
 	return this->pCbha;
 }
 
+_LaserRangeFinder *
+Brain::lrf()
+{
+	return this->pLRF;
+}
+
+bool
+Brain::hasLRF()
+{
+	return this->hasLaserRangeFinder;
+}
+
 KinectReader *
 Brain::kinect()
 {
@@ -128,6 +141,19 @@ Brain::initialize()
 	std::cerr << "- CompactBHA" << std::endl;
 	this->pCbha = new _CompactBha( this );
 
+	std::cerr << "- LaserRangeFinder" << std::endl;
+	this->pLRF = new _LaserRangeFinder( this );
+	if ( this->pLRF->test() )
+	{
+		std::cerr << ": LRF OK!" << std::endl;
+		this->hasLaserRangeFinder = true;
+	}
+	else
+	{
+		std::cerr << "!! LRF failed" <<std::endl;
+		this->hasLaserRangeFinder = false;
+		delete this->pLRF;  /// @todo Not sure if this is the best way
+	}
 
 	this->initializationDone = true;
 	std::cerr << "--Initialization complete" << std::endl;

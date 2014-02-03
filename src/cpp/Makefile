@@ -11,8 +11,8 @@ TCP=tcp/
 AUX=aux/
 GEOMETRY=geometry/
 
-main: main.cpp Control.cpp $(BIN)Brain.o $(BIN)_Bumper.o $(BIN)_CompactBha.o $(BIN)_Odometry.o $(BIN)_OmniDrive.o $(BIN)_DistanceSensors.o $(BIN)Vector.o $(BIN)Coordinate.o $(BIN)Angle.o $(BIN)AngularCoordinate.o $(BIN)Scalar.o $(BIN)VolumeCoordinate.o $(BIN)TcpSocket.o $(BIN)KinectReader.o
-	$(CC) $(CFLAGS) -l $(API2LIB) -o $@ main.cpp Control.cpp $(BIN)Brain.o $(BIN)_Bumper.o $(BIN)_CompactBha.o $(BIN)_Odometry.o $(BIN)_OmniDrive.o $(BIN)_DistanceSensors.o $(BIN)Vector.o $(BIN)Coordinate.o $(BIN)Angle.o $(BIN)AngularCoordinate.o $(BIN)Scalar.o $(BIN)VolumeCoordinate.o $(BIN)TcpSocket.o $(BIN)KinectReader.o
+main: main.cpp Control.cpp $(BIN)Brain.o $(BIN)_Bumper.o $(BIN)_CompactBha.o $(BIN)_Odometry.o $(BIN)_OmniDrive.o $(BIN)_DistanceSensors.o $(BIN)_LaserRangeFinder.o $(BIN)Vector.o $(BIN)Coordinate.o $(BIN)Angle.o $(BIN)AngularCoordinate.o $(BIN)Scalar.o $(BIN)VolumeCoordinate.o $(BIN)TcpSocket.o $(BIN)KinectReader.o
+	$(CC) $(CFLAGS) -l $(API2LIB) -o $@ main.cpp Control.cpp $(BIN)Brain.o $(BIN)_Bumper.o $(BIN)_CompactBha.o $(BIN)_Odometry.o $(BIN)_OmniDrive.o $(BIN)_DistanceSensors.o $(BIN)_LaserRangeFinder.o $(BIN)Vector.o $(BIN)Coordinate.o $(BIN)Angle.o $(BIN)AngularCoordinate.o $(BIN)Scalar.o $(BIN)VolumeCoordinate.o $(BIN)TcpSocket.o $(BIN)KinectReader.o
 
 $(BIN)Brain.o: $(ROBOTINO)Brain.cpp
 	@[ -d $(BIN) ] || mkdir -p $(BIN)
@@ -35,6 +35,10 @@ $(BIN)_OmniDrive.o: $(ROBOTINO)_OmniDrive.cpp
 	$(CC) $(CFLAGS) -c -o $@ $?
 
 $(BIN)_DistanceSensors.o: $(ROBOTINO)_DistanceSensors.cpp
+	@[ -d $(BIN) ] || mkdir -p $(BIN)
+	$(CC) $(CFLAGS) -c -o $@ $?
+
+$(BIN)_LaserRangeFinder.o: $(ROBOTINO)_LaserRangeFinder.cpp
 	@[ -d $(BIN) ] || mkdir -p $(BIN)
 	$(CC) $(CFLAGS) -c -o $@ $?
 

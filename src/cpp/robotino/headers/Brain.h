@@ -18,6 +18,7 @@ class _CompactBha;
 class _Odometry;
 class _OmniDrive;
 class _DistanceSensors;
+class _LaserRangeFinder;
 
 class KinectReader;
 
@@ -79,6 +80,19 @@ class Brain : public rec::robotino::api2::Com
 	 * @return	Pointer to the _CompactBha object
 	 */
 	_CompactBha * cbha();
+
+	/**
+	 * Gets a ponter to the _LaserRangeFinder object
+	 *
+	 * @return  Pointer to the _LaserRangeFinder object
+	 */
+	_LaserRangeFinder * lrf();
+
+	/** Returns if a LaserRangeFinder is present
+	 *
+	 * @return  Presence of LaserRangeFinder
+	 */
+	bool hasLRF();
 
 	/**
 	 * Gets a pointer to the KinectReader object
@@ -149,7 +163,9 @@ class Brain : public rec::robotino::api2::Com
 	/// Stop variable for comEvents loop
 		runComEventsLoop,
 	/// Indiator and stop variable for KinectReader loop
-		kinectRunning;
+		kinectRunning,
+	/// If LaserRangeFinder is available
+		hasLaserRangeFinder;
 
 	_Bumper
 	/// Holds a pointer to the _Bumper object
@@ -170,6 +186,10 @@ class Brain : public rec::robotino::api2::Com
 	_CompactBha
 	/// Holds a pointer to the _CompactBha object
 	   	* pCbha;
+
+	_LaserRangeFinder
+	/// Holds a pointer to the _LaserRangeFinder object
+		* pLRF;
 
 	KinectReader
 	/// Holds a pointer to the _KinectReader object

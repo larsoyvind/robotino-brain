@@ -2,6 +2,7 @@
 #include "robotino/headers/_OmniDrive.h"
 #include "robotino/headers/_Odometry.h"
 #include "robotino/headers/_CompactBha.h"
+#include "robotino/headers/_LaserRangeFinder.h"
 
 #include "geometry/All.h"
 
@@ -211,6 +212,17 @@ class Control
 			{
 				std::cerr << "Pointing to Kinect position" << std::endl;
 				this->tWorker = std::thread( & Control::turnToKinectPos, this );
+			}
+			else if ( command == "printlaser" )
+			{
+				if ( this->pBrain->hasLRF() )
+				{
+					this->pBrain->lrf()->readingsToString();
+				}
+				else
+				{
+					std::cerr << "LaserRangeFinder not available" << std::endl;
+				}
 			}
 
 			else if ( command == "brainstop" )
