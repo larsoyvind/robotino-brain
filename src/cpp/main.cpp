@@ -42,6 +42,7 @@ int main( int argc, char *argv[] )
 	if ( returnValue )
 	{
 		cout << "Error during brain initialization" << endl;
+		cout << "hello" << endl; 
 		return EXIT_FAILURE;
 	}
 	
