@@ -11,7 +11,8 @@ SUPERTMPDIR="/home/$USER/tmp"
 TMPDIR="$SUPERTMPDIR/robotino"
 CURDIR=`pwd`
 SYMLINKSCRIPTNAME="symlinkApi.sh"
-SYMLINKSCRIPTURL="https://github.com/larsoyvind/robotino-brain/raw/master/tools/$SYMLINKSCRIPTNAME"
+#SYMLINKSCRIPTURL="https://github.com/larsoyvind/robotino-brain/raw/master/tools/$SYMLINKSCRIPTNAME"
+SYMLINKSCRIPTURL="https://raw.githubusercontent.com/larsoyvind/robotino-brain/master/tools/$SYMLINKSCRIPTNAME"
 
 # Don't run if root
 if [ "$(id -u)" = "0" ]; then
@@ -30,10 +31,9 @@ generate this message).
 
 You can run the script anyway, but for the script to work you will have to
 provide the dependencies yourself (these will be listed in the next dialog).
-
 (This has been tested and is working on Arch Linux.)
 
-Do you wish to continue anyway? (N) "
+Do you wish to continue anyway? (n) "
 	read CONTINUE
 	case $CONTINUE in
 		"y" )
@@ -54,14 +54,15 @@ fi
 
 # Be nice, ask for consent
 echo -n "
-This script will install the api2 for Robotino into
-	$APIDIR
-using
-	$TMPDIR
-as temporary storage.
+The api2 for Robotino will now be installed:
+Install dir: $APIDIR
+Temp dir: $TMPDIR 
+After the installation symlinks will be created in system folders making
+compilation and linking work as if the API was installed from a system package.
+This will require root privileges.
 
-During the install, the following dependencies and any dependecies they might
-have will also be installed:
+During the installation, the following dependencies and any dependecies they
+might have will also be installed:
 $DEPEND
 
 We take no responsibility for any harm caused by this script.
@@ -109,17 +110,18 @@ fi
 if [ -e "$APIDIR" ]; then
 	rm -rf $APIDIR
 fi
-mkdir -p $APIDIR
-
 mkdir -p $TMPDIR/build/api2
 cd $APIDIR
 cmake $TMPDIR/source/api2
-make -j5
+make
 make install
 
 
 # Symlink api into the folders the compiler and linker will look
 cd $TMPDIR
+if [ -e "$TMPDIR/$SYMLINKSCRIPTNAME" ]; then
+	rm $TMPDIR/$SYMLINKSCRIPTNAME
+fi
 wget $SYMLINKSCRIPTURL
 echo "
 We will now run a script to creates symlinks to the newly compiled api
@@ -132,7 +134,7 @@ sudo bash $SYMLINKSCRIPTNAME $APIDIR
 # Cleanup?
 echo -n "
 API installation has completed, would you like us to remove the temporary
-files (reduces downloads when this script re-run to update installation) ? (N) "
+files (reduces downloads when this script re-run to update installation) ? (n) "
 read REMOVETMP
 case $REMOVETMP in
 	"y" )
