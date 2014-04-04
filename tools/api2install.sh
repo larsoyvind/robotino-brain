@@ -13,8 +13,6 @@ SUPERAPIDIR="/home/$USER/opt"
 APIDIR="$SUPERAPIDIR/api2"
 SUPERTMPDIR="/home/$USER/tmp"
 TMPDIR="$SUPERTMPDIR/robotino"
-SYMLINKSCRIPTNAME="symlinkApi.sh"
-SYMLINKSCRIPTURL="https://raw.githubusercontent.com/larsoyvind/robotino-brain/master/tools/$SYMLINKSCRIPTNAME"
 
 LIBLINK="/lib/librec_robotino_api2.so"
 INCDIRLINK="/include/rec"
@@ -23,6 +21,10 @@ API2PATH="/install/usr/local/robotino/api2"
 ### Variables
 DONTASK=0
 EXITAFTERPARSE=0
+DOCLEANUP=0
+DOUNINSTALL=0
+DOREMOVELINKS=0
+
 
 
 ### Functions
@@ -66,7 +68,7 @@ defaultno()
 	esac
 }
 
-# Removes symlinks
+# Removes symlink
 removelink() {
 	if [ ! "$1" ]; then
 		echo "removelink(): No file specified" 1>&2
@@ -89,7 +91,7 @@ removelink() {
 	return 0
 }
 
-# Adds symlinks
+# Adds symlink
 addlink() {
 	if [ ! "$2" ]; then
 		echo "addlink(): Parameter(s) missing" 1>&2
@@ -192,9 +194,15 @@ uninstall()
 	echo "Uninstalling..."
 	removelink /usr$LIBLINK
 	removelink /usr$INCDIRLINK
-	rm -rf $APIDIR
-	rmdir --ignore-fail-on-non-empty $SUPERAPIDIR
-	echo "Uninstall complete"
+	if [ -e $APIDIR ]; then
+		rm -rf $APIDIR
+		rmdir --ignore-fail-on-non-empty $SUPERAPIDIR
+		echo "Uninstall complete"
+	else
+		echo"
+The installation directory was not found."
+		exit 1
+	fi
 }
 
 # Print usage information
@@ -214,43 +222,54 @@ OPTIONS
 # Simple option checker
 parseargs()
 {
-	THIS="$0"
 	for ARG in $@; do
 		case $ARG in 
 			"--help" | "--usage" )
-				usage $THIS
+				usage
 				exit 0 ;;
-
 			"--dontask" )
 				DONTASK=1
 				echo "Installing without prompting"
 				shift ;;
-
 			"--cleanup" )
-				cleantmp
+				DOCLEANTMP=1
 				EXITAFTERPARSE=1
 				shift ;;
-
 			"--uninstall" )
-				uninstall
+				DOUNINSTALL=1
 				EXITAFTERPARSE=1
 				shift ;;
-
 			"--removelinks" )
-				removelink /usr$LIBLINK
-				removelink /usr$INCDIRLINK
-				exit 0 ;;
-			
+				DOREMOVELINKS=1
+				EXITAFTERPARSE=1
+				shift ;;
 			"" )
 				break ;;
-
 			* )
 				echo -e "Unknown option \"$ARG\"\n" 1>&2
 				usage
 				exit 1 ;;
 		esac
 	done
+}
+
+# Perform special actions detected by parseargs
+performactions()
+{
+	if [ $DOCLEANUP -gt 0 ]; then
+		cleantmp
+	fi
+	if [ $DOUNINSTALL -gt 0 ]; then
+		uninstall
+	else
+		if [ $DOREMOVELINKS -gt 0 ]; then
+			removelink /usr$LIBLINK
+			removelink /usr$INCDIRLINK
+		fi
+	fi
+
 	if [ $EXITAFTERPARSE -gt 0 ]; then
+		echo "exitafterparse"
 		exit 0
 	fi
 }
@@ -260,6 +279,7 @@ parseargs()
 ### Run start
 parseargs $@
 rootcheck
+performactions
 askconsent
 installdepends
 
@@ -268,11 +288,21 @@ installdepends
 if [ -e "$TMPDIR/$API2BRANCH/.svn" ]; then
 	# We already have source, just update repo instead!
 	cd $TMPDIR/$API2BRANCH
-	svn up
+	svn up || {
+		echo "
+Subversion returned an error while updating the API2 source code. Please check
+any errors, fix the problem and try again."
+		exit 1
+	}
 else
 	mkdir -p $TMPDIR
 	cd $TMPDIR
-	svn co $API2REPOSITORY $API2BRANCH
+	svn co $API2REPOSITORY $API2BRANCH || {
+		echo "
+Subversion returned an error while downloading the API2 source code. Please
+check any error messanges provided, fix the problem and try again."
+		exit 1
+	}
 	# The following line is from the Robotino wiki, it does not seem to be needed
 	#find source/api2/external -wholename "*/bin/*" -exec chmod +x {} \;
 fi
@@ -286,18 +316,19 @@ mkdir -p $APIDIR
 cd $APIDIR
 # The following line is from the Robotino wiki, it does not seem to be needed
 #export ROBOTINOAPI2_32_DIR=/home/$USER/build/api2/install/usr/local/robotino/api2/
-cmake $TMPDIR/$API2BRANCH --no-warn-unused-cli
-# make
-make install
+cmake $TMPDIR/$API2BRANCH -Wno-dev
+make install -j4 || {
+	echo "
+Error during compilation. Please check any error messages."
+	exit 1
+}
 
 
 # Symlink api into the folders the compiler and linker will look
 echo "
-We will now run a script to creates symlinks to the newly compiled api
-installation. This script needs to run as root, you might be asked for a
-password.
+We will create symlinks to the newly compiled api installation. These commands
+require root privileges, you might be asked for a password.
 "
-#wget -q -O - $SYMLINKSCRIPTURL | sudo bash
 removelink /usr$LIBLINK
 removelink /usr$INCDIRLINK
 addlink $APIDIR$API2PATH$LIBLINK /usr$LIBLINK
@@ -314,7 +345,7 @@ else
 	echo -n "
 API installation has completed, would you like us to remove the temporary
 files (reduces downloads when this script re-run to update installation) ? (n) "
-	if defaltno; then
+	if defaultno; then
 		cleantmp
 	fi
 fi
