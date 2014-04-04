@@ -2,7 +2,7 @@
 
 # This script will download, build and install the Robotino API2.
 
-DEPEND="svn build-essentials checkinstall cmake wget" # git
+DEPEND="subversion build-essential checkinstall cmake wget" # git
 
 API2REPOSITORY="http://svn.openrobotino.org/api2/trunk"
 API2BRANCH="source/api2"
@@ -110,9 +110,9 @@ fi
 if [ -e "$APIDIR" ]; then
 	rm -rf $APIDIR
 fi
-mkdir -p $TMPDIR/build/api2
+mkdir -p $APIDIR
 cd $APIDIR
-cmake $TMPDIR/source/api2
+cmake $TMPDIR/$API2BRANCH
 make
 make install
 
