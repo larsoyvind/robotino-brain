@@ -6,7 +6,7 @@
 
 ### "Constants"
 
-DEPEND="subversion build-essential cmake wget" # git checkinstall
+DEPEND="subversion build-essential cmake" # git checkinstall wget
 API2REPOSITORY="http://svn.openrobotino.org/api2/trunk"
 API2BRANCH="source/api2"
 SUPERAPIDIR="/home/$USER/opt"
@@ -40,32 +40,44 @@ rootcheck() {
 # Reads and checks a dialog requiring a full "yes" to continue
 requireyes()
 {
-	read ANSWER
-	while [[ "$ANSWER" == "" || "$ANSWER" == "y" || "$ANSWER" == "Y" ]]; do
-		echo "Please enter 'yes' to continue"
-		echo -n "Do you wish to continue? (yes/no) "
+	while true; do
 		read ANSWER
+		case "$ANSWER" in
+			"" | "y" | "Y" )
+				echo "Please enter 'yes' to continue"
+				echo -n "Do you wish to continue? (yes/no) "
+				;;
+			"yes" | "YES" )
+				return 0
+				;;
+			* )
+				return 1
+		esac
 	done
-	if [[ "$ANSWER" != "yes" && "$ANSWER" != "YES" ]]; then
-		return 1
-	fi
+}
+
+# Reads and checks an y/n/yes/no answer, defaults to yes
+defaultyes()
+{
+	read ANSWER
+	case "$ANSWER" in
+		"y" | "Y" | "yes" | "YES" | "Yes" | "" )
+			return 1;
+			;;
+	esac
+	return 0;
 }
 
 # Reads and checks an y/n/yes/no answer, defaults to no
 defaultno()
 {
 	read ANSWER
-	case $ANSWER in
-		"y" )
-			;&
-		"Y" )
-			;&
-		"yes" ) ;&
-		"YES" ) ;&
-		"Yes" )
+	case "$ANSWER" in
+		"y" | "Y" | "yes" | "YES" | "Yes" )
 			return 1;
 			;;
 	esac
+	return 0;
 }
 
 # Removes symlink
@@ -77,7 +89,7 @@ removelink() {
 
 	if [ -h "$1" ]; then
 		sudo rm "$1"
-		if [ $! ]; then
+		if [ "$!" ]; then
 			echo "Problem removing $1" 1>&2
 			return 1
 		else
@@ -100,7 +112,7 @@ addlink() {
 
 	sudo ln -s "$1" "$2"
 	
-	if [ $! ]; then
+	if [ "$!" ]; then
 		echo "Error adding symlink $2" 1>&2
 		return 1
 	else
@@ -114,7 +126,7 @@ addlink() {
 # Clean out the temporary directory
 cleantmp()
 {
-	rm -rf $TMPDIR
+	rm -rf "$TMPDIR"
 #	rmdir --ignore-fail-on-non-empty $SUPERTMPDIR
 	echo "Temporary files removed"
 }
@@ -149,17 +161,17 @@ Do you wish to continue? (yes/no) "
 	exit 1
 }
 
-# Check distribution
+# Installs dependencies, warns if not Debian-based
 installdepends()
 {
 	# Verify that apt-get is available
 	if [ -e "/usr/bin/apt-get" ]; then
 		# Install dependencies
 		echo "
-We will now install dependencies using the package manager, you might be
-asked for a password.
+Installing dependencies using the systems package manager, you might be asked
+for a password.
 "
-		sudo apt-get -y install $DEPEND
+		sudo apt-get -y install "$DEPEND"
 	else
 		if [ $DONTASK -gt 0 ]; then
 			return 0
@@ -192,11 +204,11 @@ Do you wish to continue anyway? (n) "
 uninstall()
 {
 	echo "Uninstalling..."
-	removelink /usr$LIBLINK
-	removelink /usr$INCDIRLINK
-	if [ -e $APIDIR ]; then
-		rm -rf $APIDIR
-		rmdir --ignore-fail-on-non-empty $SUPERAPIDIR
+	removelink "/usr$LIBLINK"
+	removelink "/usr$INCDIRLINK"
+	if [ -e "$APIDIR" ]; then
+		rm -rf "$APIDIR"
+		rmdir --ignore-fail-on-non-empty "$SUPERAPIDIR"
 		echo "Uninstall complete"
 	else
 		echo"
@@ -211,19 +223,20 @@ usage()
 	echo "USAGE: $0 [OPTIONS]
 
 OPTIONS
-	--help,--usage	Display this help text
-	--dontask	Perform install no questions asked
-	--cleanup	Remove temporary files
-	--uninstall	Remove installation (includes symlinks)
-	--removelinks	Remove symlinks
+   --help,--usage   Display this help text
+   --dontask        Perform install no questions asked (we take no
+                    responsibility any damage caused by this script)
+   --cleanup        Remove temporary files
+   --uninstall      Remove installation (includes symlinks)
+   --removelinks    Remove symlinks
 "
 }
 
 # Simple option checker
 parseargs()
 {
-	for ARG in $@; do
-		case $ARG in 
+	for ARG in "$@"; do
+		case "$ARG" in 
 			"--help" | "--usage" )
 				usage
 				exit 0 ;;
@@ -232,7 +245,7 @@ parseargs()
 				echo "Installing without prompting"
 				shift ;;
 			"--cleanup" )
-				DOCLEANTMP=1
+				DOCLEANUP=1
 				EXITAFTERPARSE=1
 				shift ;;
 			"--uninstall" )
@@ -269,7 +282,6 @@ performactions()
 	fi
 
 	if [ $EXITAFTERPARSE -gt 0 ]; then
-		echo "exitafterparse"
 		exit 0
 	fi
 }
@@ -277,7 +289,7 @@ performactions()
 
 
 ### Run start
-parseargs $@
+parseargs "$@"
 rootcheck
 performactions
 askconsent
@@ -285,9 +297,11 @@ installdepends
 
 
 # Get the API2 source
+echo "Fetching the api source code
+"
 if [ -e "$TMPDIR/$API2BRANCH/.svn" ]; then
 	# We already have source, just update repo instead!
-	cd $TMPDIR/$API2BRANCH
+	cd "$TMPDIR/$API2BRANCH"
 	svn up || {
 		echo "
 Subversion returned an error while updating the API2 source code. Please check
@@ -295,9 +309,9 @@ any errors, fix the problem and try again."
 		exit 1
 	}
 else
-	mkdir -p $TMPDIR
-	cd $TMPDIR
-	svn co $API2REPOSITORY $API2BRANCH || {
+	mkdir -p "$TMPDIR"
+	cd "$TMPDIR"
+	svn co "$API2REPOSITORY" "$API2BRANCH" || {
 		echo "
 Subversion returned an error while downloading the API2 source code. Please
 check any error messanges provided, fix the problem and try again."
@@ -309,14 +323,16 @@ fi
 
 
 # Create build directory and build the api
+echo "Building the api
+"
 if [ -e "$APIDIR" ]; then
-	rm -rf $APIDIR
+	rm -rf "$APIDIR"
 fi
-mkdir -p $APIDIR
-cd $APIDIR
+mkdir -p "$APIDIR"
+cd "$APIDIR"
 # The following line is from the Robotino wiki, it does not seem to be needed
 #export ROBOTINOAPI2_32_DIR=/home/$USER/build/api2/install/usr/local/robotino/api2/
-cmake $TMPDIR/$API2BRANCH -Wno-dev
+cmake "$TMPDIR/$API2BRANCH" -Wno-dev
 make install -j4 || {
 	echo "
 Error during compilation. Please check any error messages."
@@ -326,13 +342,13 @@ Error during compilation. Please check any error messages."
 
 # Symlink api into the folders the compiler and linker will look
 echo "
-We will create symlinks to the newly compiled api installation. These commands
-require root privileges, you might be asked for a password.
+We will now create symlinks to the newly compiled api installation. This
+requires root privileges, you might be asked for a password.
 "
-removelink /usr$LIBLINK
-removelink /usr$INCDIRLINK
-addlink $APIDIR$API2PATH$LIBLINK /usr$LIBLINK
-addlink $APIDIR$API2PATH$INCDIRLINK /usr$INCDIRLINK
+removelink "/usr$LIBLINK"
+removelink "/usr$INCDIRLINK"
+addlink "$APIDIR$API2PATH$LIBLINK" "/usr$LIBLINK"
+addlink "$APIDIR$API2PATH$INCDIRLINK" "/usr$INCDIRLINK"
 
 
 # Cleanup?
@@ -343,10 +359,13 @@ installation, but can be removed by re-running the script with the
 \"--cleanup\" parameter or by manually deleting $TMPDIR."
 else
 	echo -n "
-API installation has completed, would you like us to remove the temporary
-files (reduces downloads when this script re-run to update installation) ? (n) "
-	if defaultno; then
+API installation has completed, would you like to keep the temporary files
+(this will reduce future downloads when this script re-run to update the api
+installation) ? (y) "
+	if defaultyes; then
 		cleantmp
+	else
+		echo "Temporary files kept"
 	fi
 fi
 
@@ -355,7 +374,6 @@ fi
 echo "
 
 Installation completed. Any installed dependecies has been kept.
-
 
 To report bugs or look at some Robotino code, go to
 http://github.org/larsoyvind/robotino-brain
