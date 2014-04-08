@@ -171,7 +171,7 @@ installdepends()
 Installing dependencies using the systems package manager, you might be asked
 for a password.
 "
-		sudo apt-get -y install "$DEPEND"
+		sudo apt-get -y install $DEPEND
 	else
 		if [ $DONTASK -gt 0 ]; then
 			return 0
