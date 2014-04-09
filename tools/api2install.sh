@@ -136,9 +136,8 @@ addLink() {
 # Symlink api into the folders the compiler and linker will look
 symlinkApi() {
 	echo -e "
-	\e[1mWe will now create symlinks to the newly compiled api installation. This
-	requires root privileges, you might be asked for a password.\e[21m
-	"
+\e[1mWe will now create symlinks to the newly compiled api installation. This
+requires root privileges, you might be asked for a password.\e[21m"
 	removeLink "/usr$LIBLINK" || return 1
 	removeLink "/usr$INCDIRLINK" || return 1
 	addLink "$APIDIR$API2PATH$LIBLINK" "/usr$LIBLINK" || return 1
@@ -160,7 +159,7 @@ askConsent() {
 	fi
 
 	echoErr -ne "
-	
+
 \e[1mThe api2 for Robotino will now be installed:\e[21m
 
 Install dir: \e[1m$APIDIR\e[21m
@@ -192,6 +191,7 @@ installDepends() {
 \e[1mInstalling dependencies using the systems package manager, you might be asked
 for a password.\e[21m"
 		sudo apt-get -y install $DEPEND
+		echo ""
 	else
 		if [ $dontAsk -gt 0 ]; then
 			return 0
