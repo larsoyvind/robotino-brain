@@ -226,9 +226,10 @@ build dependencies manually first:
 	if [ "$packageManager" != "" ]; then
 		# A package manager was found, install dependencies
 		echoErr -e "
-\e[1mInstalling build dependencies using the systems package manager, you might
-be asked for a password:
-${missingDepends[@]}\e[21m"
+\e[1mThese build dependencies needs to be installed:
+${missingDepends[@]}
+You might be asked for a password.\e[21m
+"
 		sudo $packageManager ${missingDepends[@]} || {
 			echoErr -e "
 \e[1mError installing dependencies, fix the reported problem and try again.\e[21m"
@@ -413,7 +414,7 @@ else
 	mkdir -p "$TMPDIR"
 	cd "$TMPDIR"
 	echo -e "\e[1mcloning api2 repository\e[21m
-(this can take some time)"
+(this may take some time)"
 	svn co "$API2REPOSITORY" "$API2BRANCH" > /dev/null || {
 		echoErr -e "
 \e[1mSubversion returned an error while downloading the API2 source code. Please
@@ -437,10 +438,10 @@ mkdir -p "$APIDIR"
 cd "$APIDIR"
 # The following line is from the Robotino wiki, it does not seem to be needed
 #export ROBOTINOAPI2_32_DIR=/home/$USER/build/api2/install/usr/local/robotino/api2/
-echo -e "\e[1mGenerating build files\e[21m
+echo -e "\e[1m- Generating build files\e[21m
 "
 cmake "$TMPDIR/$API2BRANCH" -Wno-dev > /dev/null
-echo -e "\e[1mCompiling\e[21m
+echo -e "\e[1m- Compiling\e[21m
 (This may take some time. Any warning messages can usually be ignored.)
 "
 make install -j4 > /dev/null || {
