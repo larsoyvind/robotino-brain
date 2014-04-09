@@ -3,8 +3,7 @@
 # This script will download, build and install the Robotino API2.
 
 
-
-### "Constants"
+### 	"Constants"
 
 DEPEND="subversion build-essential cmake" # git checkinstall wget
 API2REPOSITORY="http://svn.openrobotino.org/api2/trunk"
@@ -18,34 +17,36 @@ LIBLINK="/lib/librec_robotino_api2.so"
 INCDIRLINK="/include/rec"
 API2PATH="/install/usr/local/robotino/api2"
 
-### Variables
-DONTASK=0
-EXITAFTERPARSE=0
-DOCLEANUP=0
-DOUNINSTALL=0
-DOREMOVELINKS=0
+DOCPATH="$APIDIR$API2PATH/doc"
+CDOC="$DOCPATH/rec_robotino_api2_c/index.html"
+CPPDOC="$DOCPATH/rec_robotino_api2/index.html"
 
 
+###		Variables
 
-### Functions
+dontAsk=0
+exitAfterParse=0
+doCleanup=0
+doUninstall=0
+doRemoveLinks=0
+doCreateLinks=0
 
-# Don't run if root
-rootcheck() {
-	if [ "$(id -u)" = "0" ]; then
-		echo "You are currently the root user, please run the script as a regular user."
-		exit 1
-	fi
+
+###		Utility functions
+
+# Echo error msg to stderr
+echoErr() {
+	echo "$@" 1>&2;
 }
 
 # Reads and checks a dialog requiring a full "yes" to continue
-requireyes()
-{
+requireYes() {
 	while true; do
-		read ANSWER
-		case "$ANSWER" in
+		read answer
+		case "$answer" in
 			"" | "y" | "Y" )
-				echo "Please enter 'yes' to continue"
-				echo -n "Do you wish to continue? (yes/no) "
+				echoErr -e "\e[1mPlease enter 'yes' to continue\e[21m"
+				echoErr -ne "Do you wish to continue? \e[1m(yes/no)\e[21m "
 				;;
 			"yes" | "YES" )
 				return 0
@@ -57,33 +58,42 @@ requireyes()
 }
 
 # Reads and checks an y/n/yes/no answer, defaults to yes
-defaultyes()
-{
-	read ANSWER
-	case "$ANSWER" in
+defaultYes() {
+	read answer
+	case "$answer" in
 		"y" | "Y" | "yes" | "YES" | "Yes" | "" )
-			return 1;
+			return 0;
 			;;
 	esac
-	return 0;
+	return 1;
 }
 
 # Reads and checks an y/n/yes/no answer, defaults to no
-defaultno()
-{
-	read ANSWER
-	case "$ANSWER" in
+defaultNo() {
+	read answer
+	case "$answer" in
 		"y" | "Y" | "yes" | "YES" | "Yes" )
-			return 1;
+			return 0;
 			;;
 	esac
-	return 0;
+	return 1;
+}
+
+
+### Other functions
+
+# Don't run if root
+rootCheck() {
+	if [ "$(id -u)" = "0" ]; then
+		echoErr "You are currently the root user, please run the script as a regular user."
+		exit 1
+	fi
 }
 
 # Removes symlink
-removelink() {
+removeLink() {
 	if [ ! "$1" ]; then
-		echo "removelink(): No file specified" 1>&2
+		echo "removeLink(): No file specified" 1>&2
 		return 1
 	fi
 
@@ -104,9 +114,9 @@ removelink() {
 }
 
 # Adds symlink
-addlink() {
+addLink() {
 	if [ ! "$2" ]; then
-		echo "addlink(): Parameter(s) missing" 1>&2
+		echo "addLink(): Parameter(s) missing" 1>&2
 		return 1
 	fi
 
@@ -123,26 +133,38 @@ addlink() {
 	return 0
 }
 
+# Symlink api into the folders the compiler and linker will look
+symlinkApi() {
+	echo -e "
+	\e[1mWe will now create symlinks to the newly compiled api installation. This
+	requires root privileges, you might be asked for a password.\e[21m
+	"
+	removeLink "/usr$LIBLINK" || return 1
+	removeLink "/usr$INCDIRLINK" || return 1
+	addLink "$APIDIR$API2PATH$LIBLINK" "/usr$LIBLINK" || return 1
+	addLink "$APIDIR$API2PATH$INCDIRLINK" "/usr$INCDIRLINK" || return 1
+
+	return 0
+}
+
 # Clean out the temporary directory
-cleantmp()
-{
+cleanTmp() {
 	rm -rf "$TMPDIR"
-#	rmdir --ignore-fail-on-non-empty $SUPERTMPDIR
-	echo "Temporary files removed"
+	echo -e "\e[1mTemporary files removed\e[21m"
 }
 
 # Be nice, ask for consent
-askconsent()
-{
-	if [ $DONTASK -gt 0 ]; then
+askConsent() {
+	if [ $dontAsk -gt 0 ]; then
 		return 0
 	fi
 
-	echo -n "
-The api2 for Robotino will now be installed:
+	echoErr -ne "
+	
+\e[1mThe api2 for Robotino will now be installed:\e[21m
 
-Install dir: $APIDIR
-Temp dir: $TMPDIR
+Install dir: \e[1m$APIDIR\e[21m
+Temp dir: \e[1m$TMPDIR\e[21m
 
 After the installation symlinks will be created in system folders making
 compilation and linking work as if the API was installed from a system package.
@@ -150,50 +172,46 @@ This will require root privileges.
 
 During the installation, the following dependencies and any dependecies they
 might have will also be installed:
-$DEPEND
+\e[1m$DEPEND\e[21m
 
-We take no responsibility for any harm caused by this script.
+\e[1mWe take no responsibility for any harm caused by this script.\e[21m
+
 Do you wish to continue? (yes/no) "
-
-	if requireyes; then
+	if requireYes; then
 		return 0
 	fi
 	exit 1
 }
 
 # Installs dependencies, warns if not Debian-based
-installdepends()
-{
+installDepends() {
 	# Verify that apt-get is available
 	if [ -e "/usr/bin/apt-get" ]; then
 		# Install dependencies
-		echo "
-Installing dependencies using the systems package manager, you might be asked
-for a password.
-"
+		echoErr -e "
+\e[1mInstalling dependencies using the systems package manager, you might be asked
+for a password.\e[21m"
 		sudo apt-get -y install $DEPEND
 	else
-		if [ $DONTASK -gt 0 ]; then
+		if [ $dontAsk -gt 0 ]; then
 			return 0
 		fi
 
 		# Unsupported distro warning
-		echo -n "
-Unsupported distribution!
+		echoErr -ne "
 
-This installation script has been written for and tested on Ubuntu (14.04 LTS),
-and will possibly work for other Debian/Ubuntu derivatives (which should not
-generate this message).
+\e[1mUnsupported distribution!\e[21m
 
-You can run the script anyway, but for the script to work you will have to
+This installation script has been written for Ubuntu and will possibly work for
+other Debian/Ubuntu derivatives (which should not generate this message).
+
+\e[1mYou can run the script anyway,\e[21m but for the script to work you will have to
 provide the dependencies yourself (as described in the previous dialog).
-(This has been tested to work on Arch Linux.)
+This has been tested to work on Arch Linux.
 
-Do you wish to continue anyway? (n) "
+Do you wish to continue anyway? \e[1m(y/N)\e[21m "
 
-		if defaultno; then
-			exit 1	# Recieved "yes"
-		fi
+		defaultNo || exit 1
 		echo ""
 		return 0
 	fi
@@ -201,61 +219,111 @@ Do you wish to continue anyway? (n) "
 }
 
 # Uninstallation
-uninstall()
-{
-	echo "Uninstalling..."
-	removelink "/usr$LIBLINK"
-	removelink "/usr$INCDIRLINK"
+uninstall() {
+	echo -e "\e[1mUninstalling...\e[21m"
 	if [ -e "$APIDIR" ]; then
+		echo "Removing symlinks"
+		removeLink "/usr$LIBLINK"
+		removeLink "/usr$INCDIRLINK"
+		echo "Removing files from $SUPERAPIDIR"
 		rm -rf "$APIDIR"
 		rmdir --ignore-fail-on-non-empty "$SUPERAPIDIR"
-		echo "Uninstall complete"
+		echo -e "\e[1mUninstall complete\e[21m"
+		if [ -e "$TMPDIR" ]; then
+			echo "To remove temporary files from installation, please run
+$0 --cleanup"
+		fi
 	else
-		echo"
-The installation directory was not found."
+		echoErr "Error: The installation directory was not found."
 		exit 1
 	fi
 }
 
+# Rudementary check to see if the api is installed
+isInstalled() {
+	if [ -e "$CPPDOC" ]; then
+		return 0
+	else
+		return 1
+	fi
+}
+
 # Print usage information
-usage()
-{
+usage() {
 	echo "USAGE: $0 [OPTIONS]
+
+Installs RobotinoAPI2 in the user account and symlinks the api into system
+folders for native inclusion during compilation and running.
+
+The script can be run again to update the installation.
+
 
 OPTIONS
    --help,--usage   Display this help text
+
    --dontask        Perform install no questions asked (we take no
                     responsibility any damage caused by this script)
+
+   --doc            Opens C++ api documentation in browser (if available)
+   --cdoc           Opens C api documentation in browser (if available)
+
+   --createlinks    Creates symlinks (done automatically during install)
+
    --cleanup        Remove temporary files
    --uninstall      Remove installation (includes symlinks)
    --removelinks    Remove symlinks
 "
+#   --verbose        Display full output of child processes
 }
 
 # Simple option checker
-parseargs()
-{
+parseArgs() {
 	for ARG in "$@"; do
 		case "$ARG" in 
 			"--help" | "--usage" )
 				usage
 				exit 0 ;;
+			"--doc" )
+				isInstalled || {
+					echoerr "Please install first"
+					exit 1
+				}
+				xdg-open "$CPPDOC" || {
+					echoerr -e "Unable to open browser (using xdg), the documentation is available here:\n$CPPDOC"
+					exit 1
+				}
+				exit 0 ;;
+			"--cdoc" )
+				isInstalled || {
+					echoerr "Please install first"
+					exit 1
+				}
+				xdg-open "$CDOC" || {
+					echoerr -e "Unable to open browser (using xdg), the documentation is available here:\n$CPPDOC"
+					exit 1
+				}
+				exit 0 ;;
 			"--dontask" )
-				DONTASK=1
+				dontAsk=1
 				echo "Installing without prompting"
 				shift ;;
 			"--cleanup" )
-				DOCLEANUP=1
-				EXITAFTERPARSE=1
+				doCleanup=1
+				exitAfterParse=1
 				shift ;;
 			"--uninstall" )
-				DOUNINSTALL=1
-				EXITAFTERPARSE=1
+				doUninstall=1
+				exitAfterParse=1
 				shift ;;
 			"--removelinks" )
-				DOREMOVELINKS=1
-				EXITAFTERPARSE=1
+				doRemoveLinks=1
+				exitAfterParse=1
 				shift ;;
+			"--createlinks" )
+				doCreateLinks=1
+				shift ;;
+#			"--verbose" )
+#				shift ;;
 			"" )
 				break ;;
 			* )
@@ -266,22 +334,24 @@ parseargs()
 	done
 }
 
-# Perform special actions detected by parseargs
-performactions()
-{
-	if [ $DOCLEANUP -gt 0 ]; then
-		cleantmp
+# Perform special actions detected by parseArgs
+performActions() {
+	if [ $doCleanup -gt 0 ]; then
+		cleanTmp
 	fi
-	if [ $DOUNINSTALL -gt 0 ]; then
+	if [ $doUninstall -gt 0 ]; then
 		uninstall
 	else
-		if [ $DOREMOVELINKS -gt 0 ]; then
-			removelink /usr$LIBLINK
-			removelink /usr$INCDIRLINK
+		if [ $doRemoveLinks -gt 0 ]; then
+			removeLink /usr$LIBLINK
+			removeLink /usr$INCDIRLINK
+		fi
+		if [ $doCreateLinks -gt 0 ]; then
+			symlinkApi || exit 1
 		fi
 	fi
 
-	if [ $EXITAFTERPARSE -gt 0 ]; then
+	if [ $exitAfterParse -gt 0 ]; then
 		exit 0
 	fi
 }
@@ -289,32 +359,37 @@ performactions()
 
 
 ### Run start
-parseargs "$@"
-rootcheck
-performactions
-askconsent
-installdepends
+
+parseArgs "$@"
+rootCheck
+performActions
+askConsent
+installDepends
 
 
 # Get the API2 source
-echo "Fetching the api source code
-"
+echo -en "\e[1mFetching the api source code, \e[21m"
 if [ -e "$TMPDIR/$API2BRANCH/.svn" ]; then
 	# We already have source, just update repo instead!
+	echo -e "\e[1mfound existing repository - updating...\e[21m"
 	cd "$TMPDIR/$API2BRANCH"
-	svn up || {
-		echo "
-Subversion returned an error while updating the API2 source code. Please check
-any errors, fix the problem and try again."
+	svn up > /dev/null || {
+		echoErr -e "
+\e[1mSubversion returned an error while updating the API2 source code. Please check
+any errors, fix the problem and try again.\e[21m
+"
 		exit 1
 	}
 else
 	mkdir -p "$TMPDIR"
 	cd "$TMPDIR"
-	svn co "$API2REPOSITORY" "$API2BRANCH" || {
-		echo "
-Subversion returned an error while downloading the API2 source code. Please
-check any error messanges provided, fix the problem and try again."
+	echo -e "\e[1mcloning api2 repository...\e[21m
+(this can take some time)"
+	svn co "$API2REPOSITORY" "$API2BRANCH" > /dev/null || {
+		echoErr -e "
+\e[1mSubversion returned an error while downloading the API2 source code. Please
+check any error messanges provided, fix the problem and try again.\e[21m
+"
 		exit 1
 	}
 	# The following line is from the Robotino wiki, it does not seem to be needed
@@ -323,7 +398,8 @@ fi
 
 
 # Create build directory and build the api
-echo "Building the api
+echo -e "
+\e[1mBuilding the api...\e[21m
 "
 if [ -e "$APIDIR" ]; then
 	rm -rf "$APIDIR"
@@ -332,48 +408,52 @@ mkdir -p "$APIDIR"
 cd "$APIDIR"
 # The following line is from the Robotino wiki, it does not seem to be needed
 #export ROBOTINOAPI2_32_DIR=/home/$USER/build/api2/install/usr/local/robotino/api2/
-cmake "$TMPDIR/$API2BRANCH" -Wno-dev
-make install -j4 || {
-	echo "
-Error during compilation. Please check any error messages."
+echo -e "\e[1mGenerating build files...\e[21m
+"
+cmake "$TMPDIR/$API2BRANCH" -Wno-dev > /dev/null
+echo -e "\e[1mCompiling...\e[21m
+(This may take some time. Any warning messages can usually be ignored.)
+"
+make install -j4 > /dev/null || {
+	echoErr -e "
+\e[1mError during compilation. Please check any error messages.\e[21m
+"
 	exit 1
 }
 
 
-# Symlink api into the folders the compiler and linker will look
-echo "
-We will now create symlinks to the newly compiled api installation. This
-requires root privileges, you might be asked for a password.
+# Symlink the api
+symlinkApi || {
+	echo -e "
+\e[1mError during symlink creation. Please check any error messages.\e[21m
 "
-removelink "/usr$LIBLINK"
-removelink "/usr$INCDIRLINK"
-addlink "$APIDIR$API2PATH$LIBLINK" "/usr$LIBLINK"
-addlink "$APIDIR$API2PATH$INCDIRLINK" "/usr$INCDIRLINK"
+	exit 1
+}
 
 
 # Cleanup?
-if [ $DONTASK -gt 0 ]; then
+if [ $dontAsk -gt 0 ]; then
 	echo "
-Temporary files have not been removed. They are useful for upgrading the
-installation, but can be removed by re-running the script with the
-\"--cleanup\" parameter or by manually deleting $TMPDIR."
+Temporary files have not been removed. These are useful for upgrading the
+installation, but can be removed by running the script with the \"--cleanup\"
+parameter or by manually deleting $TMPDIR."
 else
-	echo -n "
-API installation has completed, would you like to keep the temporary files
-(this will reduce future downloads when this script re-run to update the api
-installation) ? (y) "
-	if defaultyes; then
-		cleantmp
-	else
+	echoErr -ne "
+\e[1mWould you like to keep the local copy of the api repository\e[21m, this
+will reduce future downloads if this script is re-run to update the api
+installation \e[1m? (Y/n) \e[21m"
+	if defaultYes; then
 		echo "Temporary files kept"
+	else
+		cleanTmp
 	fi
 fi
 
 
 # End message
-echo "
+echo -e "
 
-Installation completed. Any installed dependecies has been kept.
+\e[1mInstallation completed. Any installed dependecies has been kept.\e[21m
 
 To report bugs or look at some Robotino code, go to
 http://github.org/larsoyvind/robotino-brain
