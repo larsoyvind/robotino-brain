@@ -5,7 +5,11 @@
 
 ### 	"Constants"
 
-DEPEND="subversion build-essential cmake" # git checkinstall wget
+# Important!!   The dependency lists must match up, $DEPEND contains the
+# package name, $DEPENDBINS contains (one of) the command(s) of the package
+DEPEND=('subversion' 'cmake')
+DEPENDBINS=('svn' 'cmake')
+
 API2REPOSITORY="http://svn.openrobotino.org/api2/trunk"
 API2BRANCH="source/api2"
 SUPERAPIDIR="/home/$USER/opt"
@@ -154,67 +158,85 @@ cleanTmp() {
 
 # Be nice, ask for consent
 askConsent() {
-	if [ $dontAsk -gt 0 ]; then
+	[ $dontAsk -gt 0 ] &&
 		return 0
-	fi
 
 	echoErr -ne "
-
 \e[1mThe api2 for Robotino will now be installed:\e[21m
 
 Install dir: \e[1m$APIDIR\e[21m
 Temp dir: \e[1m$TMPDIR\e[21m
 
+During the installation, some build dependencies may need to be installed.
 After the installation symlinks will be created in system folders making
 compilation and linking work as if the API was installed from a system package.
-This will require root privileges.
-
-During the installation, the following dependencies and any dependecies they
-might have will also be installed:
-\e[1m$DEPEND\e[21m
+\e[1mThese actions will require root privileges\e[21m, you will be notified when they are
+taken.
 
 \e[1mWe take no responsibility for any harm caused by this script.\e[21m
 
 Do you wish to continue? (yes/no) "
-	if requireYes; then
+	requireYes && {
+		echoErr ""
 		return 0
-	fi
+	}
+
 	exit 1
 }
 
-# Installs dependencies, warns if not Debian-based
+# Installs dependencies, exit with error if unmet and unsupported
 installDepends() {
-	# Verify that apt-get is available
+
+	missingDepends=()
+	packageManager=""
+
+	# Check build dependencies
+	for i in ${!DEPEND[@]}; do
+		[ ! -e "/usr/bin/${DEPENDBINS[$i]}" ] && {
+			# echo "${DEPEND[$i]} missing"
+			missingDepends=("${missingDepends[@]}" "${DEPEND[$i]} ")
+		}
+	done
+	[ "${#missingDepends[@]}" == 0 ] && {
+		# Build dependencies are satisfied
+		echo "Build dependencies satisfied"
+		return 0
+	}
+
+	# Install dependencies
 	if [ -e "/usr/bin/apt-get" ]; then
-		# Install dependencies
-		echoErr -e "
-\e[1mInstalling dependencies using the systems package manager, you might be asked
-for a password.\e[21m"
-		sudo apt-get -y install $DEPEND
-		echo ""
+		# Debian-base, use apt-get
+		packageManager="apt-get -y install"
+	elif [ -e "/usr/bin/pacman" ]; then
+		# Arch-base, use pacman
+		packageManager="pacman --noconfirm -S"
 	else
-		if [ $dontAsk -gt 0 ]; then
-			return 0
-		fi
-
-		# Unsupported distro warning
-		echoErr -ne "
-
+		# Unsupported distro, advise manual install
+		echoErr -e "
 \e[1mUnsupported distribution!\e[21m
 
-This installation script has been written for Ubuntu and will possibly work for
-other Debian/Ubuntu derivatives (which should not generate this message).
-
-\e[1mYou can run the script anyway,\e[21m but for the script to work you will have to
-provide the dependencies yourself (as described in the previous dialog).
-This has been tested to work on Arch Linux.
-
-Do you wish to continue anyway? \e[1m(y/N)\e[21m "
-
-		defaultNo || exit 1
-		echo ""
-		return 0
+We are unable to automatically install the necessary build dependencies.
+\e[1mYou can still use the script,\e[21m but you need to install the following
+build dependencies manually first:
+\e[1m${missingDepends[@]}\e[21m"
+		echoErr ""
+		exit 1
 	fi
+
+	if [ "$packageManager" != "" ]; then
+		# A package manager was found, install dependencies
+		echoErr -e "
+\e[1mInstalling build dependencies using the systems package manager, you might
+be asked for a password:
+${missingDepends[@]}\e[21m"
+		sudo $packageManager ${missingDepends[@]} || {
+			echoErr -e "
+\e[1mError installing dependencies, fix the reported problem and try again.\e[21m"
+			exit 1
+		}
+		echo ""
+	fi
+
 	return 0
 }
 
@@ -274,6 +296,7 @@ OPTIONS
    --removelinks    Remove symlinks
 "
 #   --verbose        Display full output of child processes
+#   --force          Re-install even if repository is up to date and build exist
 }
 
 # Simple option checker
@@ -289,7 +312,10 @@ parseArgs() {
 					exit 1
 				}
 				xdg-open "$CPPDOC" || {
-					echoerr -e "Unable to open browser (using xdg), the documentation is available here:\n$CPPDOC"
+					echoerr -e "
+Unable to open browser (using xdg), the documentation is available here:
+$CPPDOC
+"
 					exit 1
 				}
 				exit 0 ;;
@@ -299,7 +325,10 @@ parseArgs() {
 					exit 1
 				}
 				xdg-open "$CDOC" || {
-					echoerr -e "Unable to open browser (using xdg), the documentation is available here:\n$CPPDOC"
+					echoerr -e "
+Unable to open browser (using xdg), the documentation is available here:
+$CDOC
+"
 					exit 1
 				}
 				exit 0 ;;
@@ -327,7 +356,7 @@ parseArgs() {
 			"" )
 				break ;;
 			* )
-				echo -e "Unknown option \"$ARG\"\n" 1>&2
+				echoErr -e "Unknown option \"$ARG\"\n"
 				usage
 				exit 1 ;;
 		esac
@@ -371,7 +400,7 @@ installDepends
 echo -en "\e[1mFetching the api source code, \e[21m"
 if [ -e "$TMPDIR/$API2BRANCH/.svn" ]; then
 	# We already have source, just update repo instead!
-	echo -e "\e[1mfound existing repository - updating...\e[21m"
+	echo -e "\e[1mfound existing repository - updating\e[21m"
 	cd "$TMPDIR/$API2BRANCH"
 	svn up > /dev/null || {
 		echoErr -e "
@@ -383,7 +412,7 @@ any errors, fix the problem and try again.\e[21m
 else
 	mkdir -p "$TMPDIR"
 	cd "$TMPDIR"
-	echo -e "\e[1mcloning api2 repository...\e[21m
+	echo -e "\e[1mcloning api2 repository\e[21m
 (this can take some time)"
 	svn co "$API2REPOSITORY" "$API2BRANCH" > /dev/null || {
 		echoErr -e "
@@ -399,7 +428,7 @@ fi
 
 # Create build directory and build the api
 echo -e "
-\e[1mBuilding the api...\e[21m
+\e[1mBuilding the api\e[21m
 "
 if [ -e "$APIDIR" ]; then
 	rm -rf "$APIDIR"
@@ -408,10 +437,10 @@ mkdir -p "$APIDIR"
 cd "$APIDIR"
 # The following line is from the Robotino wiki, it does not seem to be needed
 #export ROBOTINOAPI2_32_DIR=/home/$USER/build/api2/install/usr/local/robotino/api2/
-echo -e "\e[1mGenerating build files...\e[21m
+echo -e "\e[1mGenerating build files\e[21m
 "
 cmake "$TMPDIR/$API2BRANCH" -Wno-dev > /dev/null
-echo -e "\e[1mCompiling...\e[21m
+echo -e "\e[1mCompiling\e[21m
 (This may take some time. Any warning messages can usually be ignored.)
 "
 make install -j4 > /dev/null || {
